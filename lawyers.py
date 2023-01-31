@@ -2,6 +2,9 @@ import requests
 from bs4 import BeautifulSoup as BS
 import pandas as pd
 
+class NotValidPageNumber(Exception):
+    pass
+
 URL = 'http://lawyers.minjust.ru/Lawyers'
 HEADERS = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -23,11 +26,23 @@ def get_content(html):
     return pages
 
 def parsing(url):
+    while True:
+        try:
+            print('Enter the start page number for parsing:', end=' ')
+            start = int(input())
+            print('Enter the end page number for parsing:', end=' ')
+            end = int(input())
+            if end < start:
+                raise NotValidPageNumber
+            break
+        except ValueError:
+            print('ERROR: Page number must be an integer\nTry again')
+        except NotValidPageNumber:
+            print('ERROR: The last page number cannot be greater than the start page number\nTry again')
 
     lawyers = []
-
-    for page in range(0, 5):
-        print(f'Парсим страницу: {page}')
+    for page in range(start - 1, end):
+        print(f'Parsing page: {page + 1}')
         html = get_html(url, params={'page': page})
         lawyers.extend(get_content(html.text))
     return lawyers
@@ -40,7 +55,6 @@ def save_doc(url):
 
     for column in table.find_all('th'):
         thead.append(column.text)
-
     lawyers = pd.DataFrame(columns=thead)
 
     for row in parsing(url):
