@@ -15,17 +15,26 @@ def get_html(url, params=''):
 def get_content(html):
     soup = BS(html, 'html.parser')
     table = soup.find('table', class_='persons')
-
+    pages = []
     for line in table.find_all('tr')[1:]:
         row_data = line.find_all('td')
         row = [el.text for el in row_data]
-        lenght = len(lawyers)
-        lawyers.loc[lenght] = row
+        pages.append(row)
+    return pages
+
+def parsing(url):
+
+    lawyers = []
+
+    for page in range(0, 5):
+        print(f'Парсим страницу: {page}')
+        html = get_html(url, params={'page': page})
+        lawyers.extend(get_content(html.text))
     return lawyers
 
-
-def parsing(frame):
-    soup = BS(get_html(URL), 'html.parser')
+def save_doc(url):
+    html = get_html(url)
+    soup = BS(html.text, 'html.parser')
     table = soup.find('table', class_='persons')
     thead = []
 
@@ -34,13 +43,9 @@ def parsing(frame):
 
     lawyers = pd.DataFrame(columns=thead)
 
-    for page in range(0, 5):
-        print(f'Парсим страницу: {page}')
-        html = get
+    for row in parsing(url):
+        lenght = len(lawyers)
+        lawyers.loc[lenght] = row
+    lawyers.to_excel('lawyers.xlsx', index=False)
 
-
-    # frame.to_excel('lawyers.xlsx', index=False)
-
-
-frame = get_content(html.text)
-parsing(frame)
+save_doc(URL)
